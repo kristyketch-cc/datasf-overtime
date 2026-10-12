@@ -1,0 +1,32 @@
+# Connection settings for dbt. Safe to commit: it contains no secrets.
+# The account name comes from an environment variable and the key is a file
+# that git ignores.
+#
+# dev and prod use the same schema names in different databases:
+#   dev  -> ANALYTICS_DEV.STAGING, ...
+#   prod -> ANALYTICS.STAGING, ...
+
+datasf_overtime:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: SVC_DBT
+      private_key_path: "{{ env_var('SNOWFLAKE_DBT_PRIVATE_KEY_FILE', '../snowflake_dbt_key.p8') }}"
+      role: TRANSFORMER
+      warehouse: TRANSFORMING_WH
+      database: ANALYTICS_DEV
+      schema: STAGING
+      threads: 4
+
+    prod:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: SVC_DBT
+      private_key_path: "{{ env_var('SNOWFLAKE_DBT_PRIVATE_KEY_FILE', '../snowflake_dbt_key.p8') }}"
+      role: TRANSFORMER
+      warehouse: TRANSFORMING_WH
+      database: ANALYTICS
+      schema: STAGING
+      threads: 4

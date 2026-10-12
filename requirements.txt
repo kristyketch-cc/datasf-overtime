@@ -1,0 +1,5 @@
+# Python packages for the loader and for dbt.
+requests>=2.31
+python-dotenv>=1.0
+snowflake-connector-python>=3.12
+dbt-snowflake>=1.10,<2.0

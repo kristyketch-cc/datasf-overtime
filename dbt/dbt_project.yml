@@ -1,0 +1,16 @@
+# dbt settings. Each folder of models gets its own schema and materialization.
+name: datasf_overtime
+version: "1.0.0"
+profile: datasf_overtime
+
+models:
+  datasf_overtime:
+    staging:          # cleans the raw data: one row in, one row out
+      +materialized: view
+      +schema: staging
+    intermediate:     # shared logic both analytics models use
+      +materialized: view
+      +schema: intermediate
+    analytics:        # what the dashboard reads
+      +materialized: table
+      +schema: analytics

@@ -1,0 +1,52 @@
+# The source table, what each model is, and the tests.
+
+version: 2
+
+sources:
+  - name: controller
+    description: Raw data loaded by ingest/load_employee_compensation.py.
+    database: RAW
+    schema: controller
+    tables:
+      - name: employee_compensation
+        description: One row per source row per load, stored as JSON.
+      - name: load_audit
+        description: One row per run of the loader.
+        config:
+          # Fails if no load has finished in 49 hours. `dbt source freshness`
+          # runs this check, so a stopped loader is caught.
+          loaded_at_field: finished_at
+          freshness:
+            warn_after: {count: 25, period: hour}
+            error_after: {count: 49, period: hour}
+
+models:
+  - name: stg_controller__employee_compensation
+    description: >
+      The raw data with proper types and column names, one row per source
+      row, from the most recent load. Drops nothing and changes no values.
+      Every year appears twice (calendar and fiscal), and names beside each
+      code change spelling over the years, so downstream models filter on
+      year_type and group by code.
+    columns:
+      - name: compensation_id
+        description: >
+          Row id. The source has none, and name + job + department + year is
+          not unique, so this hashes the columns that together identify a row.
+        data_tests: [not_null, unique]
+
+  - name: int_compensation_fiscal_years
+    description: Complete fiscal years only. The records both analytics models report on.
+
+  - name: employee_overtime_flags
+    description: >
+      One row per employee record, flagged when its overtime-to-salary ratio
+      is above Q3 + 3 x IQR for its peer group and its overtime is at least
+      $10,000.
+
+  - name: department_overtime_summary
+    description: Regular pay and overtime by department and fiscal year.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [year, department_code]
